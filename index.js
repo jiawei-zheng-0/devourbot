@@ -115,7 +115,7 @@ client.once('ready', () => {
 
 client.on('message', message => {
     if (message.channel.type === 'text') {// message in text channel
-        console.log('Message Recieved: ' + message.member.nickname + ': ' + message.content);
+        console.log('Message Recieved: ' + message.author.username + ': ' + message.content);
         if (message.content === '$balance') {
             if (message.member.roles.some('name', 'Devour')) {// message from a devour member
                 console.log('Request: Balance request from ' + message.author.username + 'id = ' + message.author.id);
