@@ -16,7 +16,7 @@ const TOKEN_PATH = 'token.json';
 fs.readFile('credentials.json', (err, content) => {
     if (err) return console.log('Error loading client secret file:', err);
     // Authorize a client with credentials, then call the Google Sheets API.
-    authorize(JSON.parse(content), listMajors);
+    authorize(JSON.parse(content), initSheetConnection);
 });
 
 /**
@@ -77,7 +77,7 @@ function getNewToken(oAuth2Client, callback) {
  * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
-function listMajors(auth) {
+function initSheetConnection(auth) {
     const sheets = google.sheets({ version: 'v4', auth });
     sheets.spreadsheets.values.get({
         spreadsheetId: config.sheetID,
@@ -86,7 +86,7 @@ function listMajors(auth) {
         if (err) return console.log('The API returned an error: ' + err);
         const rows = res.data.values;
         if (rows.length) {
-            console.log(rows[0][0]);
+            console.log('Guild Total :' + rows[0][0]);
         } else {
             console.log('No data found.');
         }
@@ -115,9 +115,9 @@ client.once('ready', () => {
 
 client.on('message', message => {
     if (message.channel.type === 'text') {// message in text channel
-        console.log('Message Recieved: ' + message.content);
+        console.log('Message Recieved: ' + message.member.nickname + ': ' + message.content);
         if (message.content === '$balance') {
-            if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
+            if (message.member.roles.some('name', 'Devour')) {// message from a devour member
                 console.log('Request: Balance request from ' + message.author.username + 'id = ' + message.author.id);
                 message.author.send('Your balance for this week is ' + message.channel.name);
             }
@@ -130,6 +130,7 @@ client.on('message', message => {
                 console.log('Request: Guild total request from ' + message.author.username + ' id = ' + message.author.id);
                 getGuildBalance(key, function(err, data) {
                     message.author.send('Guild total for this week is ' + data);
+                    console.log('Sent Message to ' + message.author.id + ': Guild total for this week is ' + data);
                 });
             }
             else {
@@ -143,5 +144,6 @@ client.on('message', message => {
     }
     */
 });
+client.on('error', console.error);
 
 client.login(config.token);
