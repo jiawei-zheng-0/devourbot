@@ -92,17 +92,17 @@ function listMajors(auth) {
         }
     });
 }
-function getGuildBalance(auth) {
+function getGuildBalance(auth, callback) {
     const sheets = google.sheets({ version: 'v4', auth });
     sheets.spreadsheets.values.get({
         spreadsheetId: config.sheetID,
         range: config.totalRange,
     }, (err, res) => {
-        if (err) return console.log('The API returned an error: ' + err);
+        if (err) callback('The API returned an error: ' + err);
         const rows = res.data.values;
         if (rows.length) {
             console.log(rows[0][0]);
-            return rows[0][0];
+            callback(null, rows[0][0]);
         } else {
             console.log('No data found.');
         }
@@ -124,7 +124,9 @@ client.on('message', message => {
             }
             else if (message.content === '$guildbalance') {
                 console.log('Guild total request from ' + message.author.username + 'id = ' + message.author.id);
-                message.author.send('Guild total for this week is ' + getGuildBalance(key));
+                getGuildBalance(key, function(err, data) {
+                    message.author.send('Guild total for this week is ' + data);
+                });
             }
         }
         else {
