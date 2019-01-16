@@ -101,7 +101,7 @@ function getGuildBalance(auth, callback) {
         if (err) callback('The API returned an error: ' + err);
         const rows = res.data.values;
         if (rows.length) {
-            console.log(rows[0][0]);
+            console.log('Data: ' + rows[0][0]);
             callback(null, rows[0][0]);
         } else {
             console.log('No data found.');
@@ -114,23 +114,27 @@ client.once('ready', () => {
 });
 
 client.on('message', message => {
-    console.log(message.content);
     if (message.channel.type === 'text') {// message in text channel
-        if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
-            console.log('Devour Member');
-            if (message.content === '$balance') {
-                console.log('Balance request from ' + message.author.username + 'id = ' + message.author.id);
+        console.log('Message Recieved: ' + message.content);
+        if (message.content === '$balance') {
+            if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
+                console.log('Request: Balance request from ' + message.author.username + 'id = ' + message.author.id);
                 message.author.send('Your balance for this week is ' + message.channel.name);
             }
-            else if (message.content === '$guildbalance') {
-                console.log('Guild total request from ' + message.author.username + 'id = ' + message.author.id);
+            else {
+                console.log('Error: Non Devour Member');// message not from a devour member
+            }
+        }
+        else if (message.content === '$guildbalance') {
+            if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
+                console.log('Request: Guild total request from ' + message.author.username + ' id = ' + message.author.id);
                 getGuildBalance(key, function(err, data) {
                     message.author.send('Guild total for this week is ' + data);
                 });
             }
-        }
-        else {
-            console.log('Non Devour Member');// message not from a devour member
+            else {
+                console.log('Error: Non Devour Member');// message not from a devour member
+            }
         }
     }
     /*
