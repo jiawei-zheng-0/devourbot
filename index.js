@@ -270,7 +270,7 @@ client.on('message', message => {
             const monkaCopEmoji = client.emojis.get('421812771219570689');
             message.channel.send('WEE WOO WEE WOO ' + monkaCopEmoji);
         }
-        if (message.content.includes('rin')) {
+        if (message.content.match(/\brin\b/g)) {
             const peepogunEmoji = client.emojis.get('421812739967680523');
             message.react(peepogunEmoji);
         }
