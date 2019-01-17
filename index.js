@@ -263,12 +263,20 @@ client.on('message', message => {
             }
         }
         if (message.content.includes('loli')) {
-            const poggersEmoji = client.emojis.get('535503028053082123');
-            message.channel.send('L O L I S ${poggersEmoji}');
+            const poggersEmoji = client.emojis.get('443185247107153930');
+            message.channel.send('L O L I S ' + poggersEmoji);
         }
         if (message.content.includes('FBI')) {
-            const monkaCopEmoji = client.emojis.get('535502650360332298');
-            message.channel.send('WEE WOO WEE WOO ${monkaCopEmoji}');
+            const monkaCopEmoji = client.emojis.get('421812771219570689');
+            message.channel.send('WEE WOO WEE WOO ' + monkaCopEmoji);
+        }
+        if (message.content.includes('rin')) {
+            const peepogunEmoji = client.emojis.get('421812739967680523');
+            message.react(peepogunEmoji);
+        }
+        if (message.isMentioned('534802636822675468')) {
+            const peepostreakEmoji = client.emojis.get('450463089775738880');
+            message.react(peepostreakEmoji);
         }
     }
 });
