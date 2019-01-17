@@ -272,11 +272,13 @@ client.on('message', message => {
         }
         if (message.content.match(/\brin\b/g)) {
             const peepogunEmoji = client.emojis.get('421812739967680523');
-            message.react(peepogunEmoji);
+            //message.react(peepogunEmoji);
+            message.channel.send(peepogunEmoji);
         }
         if (message.isMentioned('534802636822675468')) {
             const peepostreakEmoji = client.emojis.get('450463089775738880');
-            message.react(peepostreakEmoji);
+            //message.react(peepostreakEmoji);
+            message.channel.send(peepostreakEmoji);
         }
     }
 });
