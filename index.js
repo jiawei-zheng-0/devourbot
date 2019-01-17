@@ -184,8 +184,8 @@ client.on('message', message => {
             if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
                 console.log('Request: Balance request from ' + message.author.username + 'id = ' + message.author.id);
                 getBalanceByID(key, message.author.id, function(err, data) {
-                    message.author.send('Your balance for this week is ' + data);
-                    console.log('Sent Message to ' + message.author.id + ': Your for this week is ' + data);
+                    message.author.send('Your SMH total for this week is ' + data);
+                    console.log('Sent Message to ' + message.author.id + ': Your SMH total for this week is ' + data);
                 });
             }
             else {
@@ -196,8 +196,8 @@ client.on('message', message => {
             if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
                 console.log('Request: Guild total request from ' + message.author.username + ' id = ' + message.author.id);
                 getGuildBalance(key, function(err, data) {
-                    message.author.send('Guild total for this week is ' + data);
-                    console.log('Sent Message to ' + message.author.id + ': Guild total for this week is ' + data);
+                    message.author.send('Guild total from SMH since last payout is ' + data);
+                    console.log('Sent Message to ' + message.author.id + ': Guild total from SMH since last payout is ' + data);
                 });
             }
             else {
