@@ -217,31 +217,54 @@ client.on('message', message => {
                         if (e == '') e = 0;
                     });
                     var summaryText = 'Time: ' + data[0]
-                        + '\nFamily Name: ' + data[1]
-                        + '\nDeckhand 1 Family Name: ' + data[2]
-                        + '\nDeckhand 2 Family Name: ' + data[3]
-                        + '\nDeckhand 3 Family Name: ' + data[4]
-                        + '\nDeckhand 4 Family Name: ' + data[5]
-                        + '\nTotal Value: ' + data[22]
-                        + '\nSplit amount: ' + data[23]
-                        + '\nSea Monster Neidans: ' + data[6]
-                        + '\nOcean Stalker\'s Skin: ' + data[7]
-                        + '\nOcean Stalker Whiskers: ' + data[8]
-                        + '\nHekaru\'s Spike: ' + data[9]
-                        + '\nAmethyst Hekaru Spikes: ' + data[10]
-                        + '\nCandidum Shells: ' + data[11]
-                        + '\nSTEEL Candidum Shells: ' + data[12]
-                        + '\nNineshark\'s Horns Fragments: ' + data[13]
-                        + '\nNineshark Fins: ' + data[14]
-                        + '\nBlack Rust Jawbones: ' + data[15]
-                        + '\nBlack Rust Tongues: ' + data[16]
-                        + '\nGoldmont Pirate Coins: ' + data[17]
-                        + '\nGoldmont Pirate Goblets: ' + data[18]
-                        + '\nScreenshot of inventory items: ' + data[19]
-                        + '\nScreenshot of guild funds BEFORE turn in: ' + data[20]
-                        + '\nScreenshot of guild funds AFTER turn in: ' + data[21];
+                        + '\nFamily Name: ' + data[1];
 
-                    message.author.send('Last trip: ' + summaryText);
+                    if (data[2] != '')
+                        summaryText += '\nDeckhand 1 Family Name: ' + data[2];
+                    if (data[3] != '')
+                        summaryText += '\nDeckhand 2 Family Name: ' + data[3];
+                    if (data[4] != '')
+                        summaryText += '\nDeckhand 3 Family Name: ' + data[4];
+                    if (data[5] != '')
+                        summaryText += '\nDeckhand 4 Family Name: ' + data[5];
+                    if (data[22] != '')
+                        summaryText += '\nTotal Value: ' + data[22];
+                    if (data[23] != '')
+                        summaryText += '\nSplit amount: ' + data[23];
+                    if (data[6] != '')
+                        summaryText += '\nSea Monster Neidans: ' + data[6];
+                    if (data[7] != '')
+                        summaryText += '\nOcean Stalker\'s Skin: ' + data[7];
+                    if (data[8] != '')
+                        summaryText += '\nOcean Stalker Whiskers: ' + data[8];
+                    if (data[9] != '')
+                        summaryText += '\nHekaru\'s Spike: ' + data[9];
+                    if (data[10] != '')
+                        summaryText += '\nAmethyst Hekaru Spikes: ' + data[10];
+                    if (data[11] != '')
+                        summaryText += '\nCandidum Shells: ' + data[11];
+                    if (data[12] != '')
+                        summaryText += '\nSTEEL Candidum Shells: ' + data[12];
+                    if (data[13] != '')
+                        summaryText += '\nNineshark\'s Horns Fragments: ' + data[13];
+                    if (data[14] != '')
+                        summaryText += '\nNineshark Fins: ' + data[14];
+                    if (data[15] != '')
+                        summaryText += '\nBlack Rust Jawbones: ' + data[15];
+                    if (data[16] != '')
+                        summaryText += '\nBlack Rust Tongues: ' + data[16];
+                    if (data[17] != '')
+                        summaryText += '\nGoldmont Pirate Coins: ' + data[17];
+                    if (data[18] != '')
+                        summaryText += '\nGoldmont Pirate Goblets: ' + data[18];
+                    if (data[19] != '')
+                        summaryText += '\nScreenshot of inventory items: ' + data[19];
+                    if (data[20] != '')
+                        summaryText += '\nScreenshot of guild funds BEFORE turn in: ' + data[20];
+                    if (data[21] != '')
+                        summaryText += '\nScreenshot of guild funds AFTER turn in: ' + data[21];
+
+                    message.author.send('Last trip: \n' + summaryText);
                     console.log('Sent Message to ' + message.author.id + ': Last trip: ' + summaryText);
                 });
             }
