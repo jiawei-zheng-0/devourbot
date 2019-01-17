@@ -72,11 +72,6 @@ function getNewToken(oAuth2Client, callback) {
     });
 }
 
-/**
- * Prints the names and majors of students in a sample spreadsheet:
- * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
- * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
- */
 function initSheetConnection(auth) {
     const sheets = google.sheets({ version: 'v4', auth });
     sheets.spreadsheets.values.get({
@@ -92,7 +87,7 @@ function initSheetConnection(auth) {
         }
     });
 }
-function getGuildBalance(auth, callback) {
+function getGuildBalance(auth, callback) { // gets guild total from shreadsheet cell=totalRange
     const sheets = google.sheets({ version: 'v4', auth });
     sheets.spreadsheets.values.get({
         spreadsheetId: config.sheetID,
@@ -108,7 +103,7 @@ function getGuildBalance(auth, callback) {
         }
     });
 }
-function getBalanceByID(auth, id, callback) {
+function getBalanceByID(auth, id, callback) { //  gets individual total by updating cell=idcell, which in turn updates cell=individualTotalCell with that id's total, and returns it
     const sheets = google.sheets({ version: 'v4', auth });
 
     const resource = {
@@ -118,18 +113,18 @@ function getBalanceByID(auth, id, callback) {
             ]
         ]
     };
-    sheets.spreadsheets.values.update({
+    sheets.spreadsheets.values.update({//update idcell with id
         spreadsheetId: config.sheetID,
         range: config.idCell,
         valueInputOption: 'USER_ENTERED',
         resource: resource
     }, (err, res) => {
-        if (err) console.log('The API returned an error: ' + err);
+        if (err) console.log('Error in updating Cell, the API returned an error: ' + err);
         //var result = res.result;
         //console.log(result);
-        sheets.spreadsheets.values.get({
+        sheets.spreadsheets.values.get({//gets individualTotalCell and returns it
             spreadsheetId: config.sheetID,
-            range: config.familyNameCell,
+            range: config.individualTotalCell,
         }, (err, res) => {
             if (err) callback('The API returned an error: ' + err);
             const rows = res.data.values;
@@ -143,7 +138,7 @@ function getBalanceByID(auth, id, callback) {
     });
 }
 
-function getSummary(auth, id, callback) {
+function getSummary(auth, id, callback) {//updates summaryIDCell with id, and returns array of last trip values
     const sheets = google.sheets({ version: 'v4', auth });
 
     const resource = {
@@ -153,16 +148,16 @@ function getSummary(auth, id, callback) {
             ]
         ]
     };
-    sheets.spreadsheets.values.update({
+    sheets.spreadsheets.values.update({//update summaryIDCell with id
         spreadsheetId: config.sheetID,
         range: config.summaryIDCell,
         valueInputOption: 'USER_ENTERED',
         resource: resource
     }, (err, res) => {
-        if (err) console.log('The API returned an error: ' + err);
+        if (err) console.log('Error in updating Cell, the API returned an error: ' + err);
         //var result = res.result;
         //console.log(result);
-        sheets.spreadsheets.values.get({
+        sheets.spreadsheets.values.get({//gets a array of values from last trip
             spreadsheetId: config.sheetID,
             range: config.summaryRange,
         }, (err, res) => {
@@ -185,10 +180,10 @@ client.once('ready', () => {
 client.on('message', message => {
     if (message.channel.type === 'text') {// message in text channel
         console.log('Message Recieved: ' + message.author.username + ': ' + message.content);
-        if (message.content === '$balance') {
+        if (message.content === '$balance') {//if message is $balance
             if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
                 console.log('Request: Balance request from ' + message.author.username + 'id = ' + message.author.id);
-                getBalanceByID(key, message.author.id, function (err, data) {
+                getBalanceByID(key, message.author.id, function(err, data) {
                     message.author.send('Your balance for this week is ' + data);
                     console.log('Sent Message to ' + message.author.id + ': Your for this week is ' + data);
                 });
@@ -197,10 +192,10 @@ client.on('message', message => {
                 console.log('Error: Non Devour Member');// message not from a devour member
             }
         }
-        else if (message.content === '$guildbalance') {
+        else if (message.content === '$guildbalance') {//if message is $guildbalance
             if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
                 console.log('Request: Guild total request from ' + message.author.username + ' id = ' + message.author.id);
-                getGuildBalance(key, function (err, data) {
+                getGuildBalance(key, function(err, data) {
                     message.author.send('Guild total for this week is ' + data);
                     console.log('Sent Message to ' + message.author.id + ': Guild total for this week is ' + data);
                 });
@@ -209,16 +204,12 @@ client.on('message', message => {
                 console.log('Error: Non Devour Member');// message not from a devour member
             }
         }
-        else if (message.content === '$summary') {
+        else if (message.content === '$summary') {//if message is $summary
             if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
                 console.log('Request: Summary request from ' + message.author.username + ' id = ' + message.author.id);
                 getSummary(key, message.author.id, function(err, data) {
-                    data.forEach(e => {
-                        if (e == '') e = 0;
-                    });
                     var summaryText = 'Time: ' + data[0]
                         + '\nFamily Name: ' + data[1];
-
                     if (data[2] != '')
                         summaryText += '\nDeckhand 1 Family Name: ' + data[2];
                     if (data[3] != '')
@@ -263,7 +254,6 @@ client.on('message', message => {
                         summaryText += '\nScreenshot of guild funds BEFORE turn in: ' + data[20];
                     if (data[21] != '')
                         summaryText += '\nScreenshot of guild funds AFTER turn in: ' + data[21];
-
                     message.author.send('Last trip: \n' + summaryText);
                     console.log('Sent Message to ' + message.author.id + ': Last trip: ' + summaryText);
                 });
@@ -272,12 +262,15 @@ client.on('message', message => {
                 console.log('Error: Non Devour Member');// message not from a devour member
             }
         }
+        if (message.content.includes('loli')) {
+            const poggersEmoji = client.emojis.get('535503028053082123');
+            message.channel.send('L O L I S ${poggersEmoji}');
+        }
+        if (message.content.includes('FBI')) {
+            const monkaCopEmoji = client.emojis.get('535502650360332298');
+            message.channel.send('WEE WOO WEE WOO ${monkaCopEmoji}');
+        }
     }
-    /*
-    if (message.content.includes('loli')) {
-        message.channel.send('L O L I S :POGGERS:');
-    }
-    */
 });
 client.on('error', () => {
     console.log('Connection reset');
