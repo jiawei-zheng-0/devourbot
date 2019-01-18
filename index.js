@@ -81,7 +81,7 @@ function initSheetConnection(auth) {
         if (err) return console.log('The API returned an error: ' + err);
         const rows = res.data.values;
         if (rows.length) {
-            console.log('Guild Total :' + rows[0][0]);
+            //console.log('Guild Total :' + rows[0][0]);
         } else {
             console.log('No data found.');
         }
@@ -96,7 +96,7 @@ function getGuildBalance(auth, callback) { // gets guild total from shreadsheet 
         if (err) callback('The API returned an error: ' + err);
         const rows = res.data.values;
         if (rows.length) {
-            console.log('Data: ' + rows[0][0]);
+            //console.log('Data: ' + rows[0][0]);
             callback(null, rows[0][0]);
         } else {
             console.log('No data found.');
@@ -129,7 +129,7 @@ function getBalanceByID(auth, id, callback) { //  gets individual total by updat
             if (err) callback('The API returned an error: ' + err);
             const rows = res.data.values;
             if (rows.length) {
-                console.log('Data: ' + rows[0][0]);
+                //console.log('Data: ' + rows[0][0]);
                 callback(null, rows[0][0]);
             } else {
                 console.log('No data found.');
@@ -164,7 +164,7 @@ function getSummary(auth, id, callback) {//updates summaryIDCell with id, and re
             if (err) callback('The API returned an error: ' + err);
             const rows = res.data.values;
             if (rows.length) {
-                console.log('Data: ' + rows[0]);
+                //console.log('Data: ' + rows[0]);
                 callback(null, rows[0]);
             } else {
                 console.log('No data found.');
@@ -174,39 +174,39 @@ function getSummary(auth, id, callback) {//updates summaryIDCell with id, and re
 }
 
 client.once('ready', () => {
-    console.log('Start');
+    console.log(new Date().toLocaleString() + ' Start');
 });
 
 client.on('message', message => {
     if (message.channel.type === 'text') {// message in text channel
-        console.log('Message Recieved: ' + message.author.username + ': ' + message.content);
+        //console.log('Message Recieved: ' + message.author.username + ': ' + message.content);
         if (message.content === '$balance') {//if message is $balance
             if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
-                console.log('Request: Balance request from ' + message.author.username + 'id = ' + message.author.id);
+                console.log(new Date().toLocaleString() + ' Request: Balance request from ' + message.author.username + 'id = ' + message.author.id);
                 getBalanceByID(key, message.author.id, function(err, data) {
                     message.author.send('Your SMH total for this week is ' + data);
-                    console.log('Sent Message to ' + message.author.id + ': Your SMH total for this week is ' + data);
+                    console.log(new Date().toLocaleString() + ' Sent Message to ' + message.author.id + ': Your SMH total for this week is ' + data);
                 });
             }
             else {
-                console.log('Error: Non Devour Member');// message not from a devour member
+                console.log(new Date().toLocaleString() + 'Error: Non Devour Member');// message not from a devour member
             }
         }
         else if (message.content === '$guildbalance') {//if message is $guildbalance
             if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
-                console.log('Request: Guild total request from ' + message.author.username + ' id = ' + message.author.id);
+                console.log(new Date().toLocaleString() + ' Request: Guild total request from ' + message.author.username + ' id = ' + message.author.id);
                 getGuildBalance(key, function(err, data) {
                     message.author.send('Guild total from SMH since last payout is ' + data);
-                    console.log('Sent Message to ' + message.author.id + ': Guild total from SMH since last payout is ' + data);
+                    console.log(new Date().toLocaleString() + ' Sent Message to ' + message.author.id + ': Guild total from SMH since last payout is ' + data);
                 });
             }
             else {
-                console.log('Error: Non Devour Member');// message not from a devour member
+                console.log(new Date().toLocaleString() + ' Error: Non Devour Member');// message not from a devour member
             }
         }
         else if (message.content === '$summary') {//if message is $summary
             if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
-                console.log('Request: Summary request from ' + message.author.username + ' id = ' + message.author.id);
+                console.log(new Date().toLocaleString() + ' Request: Summary request from ' + message.author.username + ' id = ' + message.author.id);
                 getSummary(key, message.author.id, function(err, data) {
                     var summaryText = 'Time: ' + data[0]
                         + '\nFamily Name: ' + data[1];
@@ -255,11 +255,11 @@ client.on('message', message => {
                     if (data[21] != '')
                         summaryText += '\nScreenshot of guild funds AFTER turn in: ' + data[21];
                     message.author.send('Last trip: \n' + summaryText);
-                    console.log('Sent Message to ' + message.author.id + ': Last trip: ' + summaryText);
+                    console.log(new Date().toLocaleString() + ' Sent Message to ' + message.author.id + ': Last trip: ' + summaryText);
                 });
             }
             else {
-                console.log('Error: Non Devour Member');// message not from a devour member
+                console.log(new Date().toLocaleString() + ' Error: Non Devour Member');// message not from a devour member
             }
         }
         if (message.content.includes('loli')) {
@@ -283,7 +283,7 @@ client.on('message', message => {
     }
 });
 client.on('error', () => {
-    console.log('Connection reset');
+    console.log(new Date().toLocaleString() + ' Connection reset');
 });
 
 client.login(config.token);
