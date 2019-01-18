@@ -172,9 +172,11 @@ function getSummary(auth, id, callback) {//updates summaryIDCell with id, and re
         });
     });
 }
-
+var attendance;
 client.once('ready', () => {
     console.log(new Date().toLocaleString() + ' Start');
+    client.user.setActivity('with lolis');
+    attendance = false;
 });
 
 client.on('message', message => {
@@ -183,7 +185,7 @@ client.on('message', message => {
         if (message.content === '$balance') {//if message is $balance
             if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
                 console.log(new Date().toLocaleString() + ' Request: Balance request from ' + message.author.username + 'id = ' + message.author.id);
-                getBalanceByID(key, message.author.id, function(err, data) {
+                getBalanceByID(key, message.author.id, function (err, data) {
                     message.author.send('Your SMH total for this week is ' + data);
                     console.log(new Date().toLocaleString() + ' Sent Message to ' + message.author.id + ': Your SMH total for this week is ' + data);
                 });
@@ -195,7 +197,7 @@ client.on('message', message => {
         else if (message.content === '$guildbalance') {//if message is $guildbalance
             if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
                 console.log(new Date().toLocaleString() + ' Request: Guild total request from ' + message.author.username + ' id = ' + message.author.id);
-                getGuildBalance(key, function(err, data) {
+                getGuildBalance(key, function (err, data) {
                     message.author.send('Guild total from SMH since last payout is ' + data);
                     console.log(new Date().toLocaleString() + ' Sent Message to ' + message.author.id + ': Guild total from SMH since last payout is ' + data);
                 });
@@ -207,7 +209,7 @@ client.on('message', message => {
         else if (message.content === '$summary') {//if message is $summary
             if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
                 console.log(new Date().toLocaleString() + ' Request: Summary request from ' + message.author.username + ' id = ' + message.author.id);
-                getSummary(key, message.author.id, function(err, data) {
+                getSummary(key, message.author.id, function (err, data) {
                     var summaryText = 'Time: ' + data[0]
                         + '\nFamily Name: ' + data[1];
                     if (data[2] != '')
@@ -262,6 +264,19 @@ client.on('message', message => {
                 console.log(new Date().toLocaleString() + ' Error: Non Devour Member');// message not from a devour member
             }
         }
+        if (message.content === '$startattendance') {
+            attendance = true;
+            console.log('attendance started');
+            const warChannel = client.channels.get(config.warChannelID);
+            warChannel.members.forEach(function(guildMember, guildMemberId) {
+                console.log(guildMemberId, guildMember.user.username);
+                //setAttendance(key, member.id)
+             });
+        }
+        if (message.content === '$endattendance') {
+            attendance = false;
+            console.log('attendance stopped');
+        }
         if (message.content.includes('loli')) {
             const poggersEmoji = client.emojis.get('443185247107153930');
             message.channel.send('L O L I S ' + poggersEmoji);
@@ -282,6 +297,20 @@ client.on('message', message => {
         }
     }
 });
+
+client.on('voiceStateUpdate', (oldMember, newMember) => {
+    if (attendance == true) {
+        const newUserChannel = newMember.voiceChannel;
+        //const oldUserChannel = oldMember.voiceChannel;
+        if (newUserChannel.id === config.warChannelID) {//user joins mains channel
+            console.log(newMember.user.username + 'user joined' + newUserChannel);
+        }
+        // else if (newUserChannel === undefined) {
+         //   console.log(newMember.user.username + 'user left' + oldUserChannel);
+        //}
+    }
+});
+
 client.on('error', () => {
     console.log(new Date().toLocaleString() + ' Connection reset');
 });
