@@ -302,14 +302,15 @@ function updateAttendanceSheet(auth, nameList, callback) {
             //Iterates through Table rows, if family name is on nameList, add a y to end of its row, if not add a n
             for (var i = 0; i < rows.length; i++) {
                 var famName = rows[i][0];
+                //If match
                 if (nameList.includes(famName.toLowerCase())) {
                     rows[i].push('y');
-                    //Remove matched name from nameList
                     //for (var b = 0; b < nameList.length - 1; b++) {
                     //    if (nameList[b] === famName) {
                     //        nameList.splice(b, 1);
                     //    }
                     //}
+                    //Remove matched name from nameList
                     var index = nameList.indexOf(famName.toLowerCase());
                     if (index !== -1) nameList.splice(index, 1);
                 }
@@ -498,17 +499,19 @@ client.on('message', message => {
                         console.log(new Date().toLocaleString() + ' Attendance :\n' + data);
                         //Clears attendanceSheet
                         attendanceSheet = [];
-
-                        message.channel.send('Attendance for tonight:\n' + data.sort());
+                        var names = data.sort().toString().replace(/,/g, '\n');
+                        message.channel.send('Attendance for tonight:\nTotal attendance: ' + data.length + '\n' + names);
                         if (notFoundIds.length != 0) {
                             console.log('No Match for ids:\n' + notFoundIds);
-                            message.channel.send('No Match for ids:\n' + notFoundIds);
+                            var str = notFoundIds.toString().replace(/,/g, '\n');
+                            message.channel.send('No Match for ids:\n' + str);
                         }
                         //Update Attendance sheet accoding to family names
                         updateAttendanceSheet(key, data, function (err, res) {
                             if (res.length != 0) {
                                 console.log('No Match for family names:\n' + res);
-                                message.channel.send('No Match for family names:\n' + res);
+                                var str2 = res.toString().replace(/,/g, '\n');
+                                message.channel.send('No Match for family names:\n' + str2);
                             }
                         });
                     });
