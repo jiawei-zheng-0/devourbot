@@ -172,11 +172,11 @@ function getSummary(auth, id, callback) {//updates summaryIDCell with id, and re
         });
     });
 }
-
+var sheetName;
 function addNewColumn(auth, callback) {
     const sheets = google.sheets({ version: 'v4', auth });
     var sheetId;
-    var sheetName;
+    var columnNum;
     var request = {
         // The spreadsheet to request.
         spreadsheetId: config.attendanceSheetID,  // TODO: Update placeholder value.
@@ -197,6 +197,7 @@ function addNewColumn(auth, callback) {
         // TODO: Change code below to process the `response` object:
         sheetName = response.data.sheets[0].properties.title;
         sheetId = response.data.sheets[0].properties.sheetId;
+        columnNum = response.data.sheets[0].properties.gridProperties.columnCount;
         const requests = [];
         // Change the spreadsheet's title.
         requests.push({
@@ -216,90 +217,124 @@ function addNewColumn(auth, callback) {
                 // Handle error
                 console.log(err);
             } else {
-                callback(null, 'Column added');
+                console.log('Column Added');
+                callback(null, columnNum);
             }
         });
     });
 }
-
-function setAttendance(auth, id, callback) { //
+function idToFamilyNames(auth, idList, callback) {
     const sheets = google.sheets({ version: 'v4', auth });
-    var sheetId;
-    var sheetName;
-    var request = {
-        // The spreadsheet to request.
-        spreadsheetId: config.attendanceSheetID,  // TODO: Update placeholder value.
-        // The ranges to retrieve from the spreadsheet.
-        ranges: [],  // TODO: Update placeholder value.
-        // True if grid data should be returned.
-        // This parameter is ignored if a field mask was set in the request.
-        includeGridData: false,  // TODO: Update placeholder value.
-
-        auth: auth,
-    };
-    sheets.spreadsheets.get(request, function (err, response) {
-        if (err) {
-            console.error(err);
-            return;
-        }
-
-        // TODO: Change code below to process the `response` object:
-        sheetName = response.data.sheets[0].properties.title;
-        sheetId = response.data.sheets[0].properties.sheetId;
-        console.log(sheetName + sheetId);
-    });
-    let requests = [];
-    // Change the spreadsheet's title.
-    requests.push({
-        appendDimension: {
-            sheetId: sheetId,
-            dimension: 'COLUMNS',
-            length: 1
-        },
-    });
-    // Add additional requests (operations) ...
-    const batchUpdateRequest = { requests };
-    sheets.spreadsheets.batchUpdate({
-
+    sheets.spreadsheets.values.get({
         spreadsheetId: config.attendanceSheetID,
-        resource: batchUpdateRequest,
-        auth: auth
-    }, (err, response) => {
-        if (err) {
-            // Handle error
-            console.log(err);
-        } else {
-            console.log(sheetId + 'replacements made.');
+        range: config.IDTable,
+    }, (err, res) => {
+        if (err) callback('The API returned an error: ' + err);
+        if (res != undefined) {
+            const rows = res.data.values;
+            var nameList = [];
+            if (rows.length) {
+                console.log(rows);
+                for (var i = 0; i < idList.length; i++) {
+                    for (var c = 0; c < rows.length; c++) {
+                        if (rows[c][0] === idList[i]) {
+                            console.log('match' + rows[c][1]);
+                            nameList.push(rows[c][1]);
+                            break;
+                        }
+                    }
+                }
+                for (var a = 0; a < nameList.length; a++) {
+                    if (nameList[a].match(/\d/g)) {
+                        console.log('Error: No match found for ' + nameList[a]);
+                    }
+                }
+                callback(null, nameList);
+            } else {
+                console.log('No data found.');
+            }
         }
     });
-
 }
 
-var attendance;
+function updateAttendanceSheet(auth, nameList, callback) {
+    const sheets = google.sheets({ version: 'v4', auth });
+    var range = sheetName + config.attendanceRange;
+    console.log(range);
+    sheets.spreadsheets.values.get({
+        spreadsheetId: config.attendanceSheetID,
+        range: range,
+    }, (err, res) => {
+        if (err) callback('The API returned an error: ' + err);
+        const rows = res.data.values;
+        if (rows.length) {
+            console.log(rows);
+            for (var i = 0; i < rows.length; i++) {
+                if (nameList.includes(rows[i][0])) {
+                    rows[i].push('y');
+                }
+                else {
+                    rows[i].push('n');
+                }
+            }
+            console.log(rows);
+
+            const resource = {
+                'values': rows
+            };
+
+            sheets.spreadsheets.values.update({
+                spreadsheetId: config.attendanceSheetID,
+                range: config.attendanceRange,
+                valueInputOption: 'USER_ENTERED',
+                resource: resource
+            }, (err, res) => {
+                callback(null, res);
+            });
+
+        } else {
+            console.log('No data found.');
+        }
+    });
+}
+
+var attendance;//boolean, true if attendance is being taken, false if otherwise
+var attendanceSheet;//array of IDs of users whose attendance will be taken of
+
+/*
+    Once bot connects to server, sets attendance to false and clears attendanceSheet
+*/
 client.once('ready', () => {
     console.log(new Date().toLocaleString() + ' Start');
-    //client.user.setActivity('with lolis');
-    client.user.setActivity('hentai', { type: 'WATCHING' });
+    client.user.setActivity('with lolis');
+    //client.user.setActivity('hentai', { type: 'WATCHING' });
     attendance = false;
+    attendanceSheet = [];
 });
 
 client.on('message', message => {
-    if (message.channel.type === 'text') {// message in text channel
+    //If message was recieved in a text channel
+    if (message.channel.type === 'text') {
         //console.log('Message Recieved: ' + message.author.username + ': ' + message.content);
-        if (message.content === '$balance') {//if message is $balance
-            if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
+        //Checks if the message matches any commands
+        //Check SMH balance
+        if (message.content === '$balance') {
+            //Role Check
+            if (message.member.roles.exists('name', config.memberRole)) {
                 console.log(new Date().toLocaleString() + ' Request: Balance request from ' + message.author.username + 'id = ' + message.author.id);
                 getBalanceByID(key, message.author.id, function (err, data) {
                     message.author.send('Your SMH total for this week is ' + data);
                     console.log(new Date().toLocaleString() + ' Sent Message to ' + message.author.id + ': Your SMH total for this week is ' + data);
                 });
             }
+            //Role Check Failed
             else {
-                console.log(new Date().toLocaleString() + 'Error: Non Devour Member');// message not from a devour member
+                console.log(new Date().toLocaleString() + 'Error: Non Devour Member');
             }
         }
-        else if (message.content === '$guildbalance') {//if message is $guildbalance
-            if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
+        //Check Guild SMH total balance
+        else if (message.content === '$guildbalance') {
+            if (message.member.roles.exists('name', config.memberRole)) {
                 console.log(new Date().toLocaleString() + ' Request: Guild total request from ' + message.author.username + ' id = ' + message.author.id);
                 getGuildBalance(key, function (err, data) {
                     message.author.send('Guild total from SMH since last payout is ' + data);
@@ -307,11 +342,12 @@ client.on('message', message => {
                 });
             }
             else {
-                console.log(new Date().toLocaleString() + ' Error: Non Devour Member');// message not from a devour member
+                console.log(new Date().toLocaleString() + ' Error: Non Devour Member');
             }
         }
-        else if (message.content === '$summary') {//if message is $summary
-            if (message.member.roles.exists('name', 'Devour')) {// message from a devour member
+        //Check Summary of last SMH trip
+        else if (message.content === '$summary') {
+            if (message.member.roles.exists('name', config.memberRole)) {
                 console.log(new Date().toLocaleString() + ' Request: Summary request from ' + message.author.username + ' id = ' + message.author.id);
                 getSummary(key, message.author.id, function (err, data) {
                     var summaryText = 'Time: ' + data[0]
@@ -368,37 +404,79 @@ client.on('message', message => {
                 console.log(new Date().toLocaleString() + ' Error: Non Devour Member');// message not from a devour member
             }
         }
-        if (message.content === '$startattendance') {
-            attendance = true;
-            console.log('attendance started');
-            addNewColumn(key, function (err, data) {
-                console.log(data);
-            });
-            const warChannel = client.channels.get(config.warChannelID);
-            //warChannel.members.forEach(function (guildMember, guildMemberId) {
-            //    setAttendance(key, guildMemberId, function (err, data) {
-            //        console.log(guildMember.user.username + ' set to y');
-            //    });
-            //});
+        //Start taking attendance
+        else if (message.content === '$startattendance') {
+            //Role Check
+            if (message.member.roles.exists('name', config.modRole)) {
+                //Check whether attendance is currently beign taken
+                if (attendance == true) {
+                    console.log('Attendence already being taken');
+                    message.channel.send('Attendence already being taken');
+                }
+                else {
+                    attendance = true;
+                    console.log(new Date().toLocaleString() + ' Attendance Started');
+                    message.channel.send('Attendance Started');
+                    //Adds a new Column to attendance sheet
+                    addNewColumn(key, function (err, data) {
+                        return null;
+                    });
+                    const warChannel = client.channels.get(config.warChannelID);
+                    //Pushes all member currently in main war room when command is entered onto the attendance sheet
+                    warChannel.members.forEach(function (guildMember, guildMemberId) {
+                        attendanceSheet.push(guildMemberId);
+                    });
+                }
+            }
+            else {
+                console.log(new Date().toLocaleString() + ' Error: Non Devour Member');
+            }
         }
-        if (message.content === '$endattendance') {
-            attendance = false;
-            console.log('attendance stopped');
+        //Stop taking attendance and update the attendance sheet
+        else if (message.content === '$endattendance') {
+            if (message.member.roles.exists('name', config.modRole)) {
+                if (attendance == false) {
+                    console.log('Attendence not being taken');
+                    message.channel.send('Attendence not being taken');
+                }
+                else {
+                    attendance = false;
+                    console.log(new Date().toLocaleString() + ' Attendance stopped');
+                    message.channel.send('Attendance stopped');
+                    //console.log(attendanceSheet);
+                    //Removes duplicate ids on attendance sheet
+                    var filteredAttendanceSheet = uniq(attendanceSheet);
+                    //Converts Ids to their respective family names
+                    idToFamilyNames(key, filteredAttendanceSheet, function (err, data) {
+                        console.log(new Date().toLocaleString() + ' Attendance :\n' + data);
+                        //Clears attendanceSheet
+                        attendanceSheet = [];
+                        message.channel.send('Attendance for tonight:\n' + data);
+                        //Update Attendance sheet accoding to family names
+                        updateAttendanceSheet(key, data, function (err, res) {
+                            return null;
+                        });
+                    });
+                }
+            }
+            else {
+                console.log(new Date().toLocaleString() + ' Error: Non Devour Member');
+            }
         }
-        if (message.content.includes('loli')) {
+        else if (message.content.includes('loli')) {
             const poggersEmoji = client.emojis.get('443185247107153930');
             message.channel.send('L O L I S ' + poggersEmoji);
         }
-        if (message.content.includes('FBI')) {
+        else if (message.content.includes('FBI')) {
             const monkaCopEmoji = client.emojis.get('421812771219570689');
             message.channel.send('WEE WOO WEE WOO ' + monkaCopEmoji);
         }
-        if (message.content.match(/\brin\b/g)) {
+        else if (message.content.match(/\brin\b/g)) {
             const peepogunEmoji = client.emojis.get('421812739967680523');
             //message.react(peepogunEmoji);
             message.channel.send('' + peepogunEmoji);
         }
-        if (message.isMentioned('534802636822675468')) {
+        else if (message.isMentioned('534802636822675468')) {
             const peepostreakEmoji = client.emojis.get('450463089775738880');
             //message.react(peepostreakEmoji);
             message.channel.send('' + peepostreakEmoji);
@@ -406,13 +484,17 @@ client.on('message', message => {
     }
 });
 
+/*
+    When a new user joins main war room and attendance is currently being taken, push his ID into attendence sheet
+*/
 client.on('voiceStateUpdate', (oldMember, newMember) => {
     if (attendance == true) {
         const newUserChannel = newMember.voiceChannel;
         //const oldUserChannel = oldMember.voiceChannel;
         //console.log(oldMember + newMember);
         if (newUserChannel != undefined && newUserChannel.id === config.warChannelID) {//user joins mains channel
-            console.log(newMember.user.username + 'user joined' + newUserChannel);
+            //console.log(new Date().toLocaleString() + ' user joined');
+            attendanceSheet.push(newMember.user.id);
         }
         // else if (newUserChannel === undefined) {
         //   console.log(newMember.user.username + 'user left' + oldUserChannel);
@@ -425,3 +507,7 @@ client.on('error', () => {
 });
 
 client.login(config.token);
+
+function uniq(a) {
+    return Array.from(new Set(a));
+}
