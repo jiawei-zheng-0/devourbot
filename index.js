@@ -271,7 +271,7 @@ function idToFamilyNames(auth, idList, callback) {
                 //    if (nameList[a].match(/\d/g)) {
                 //        console.log('Error: No match found for ' + nameList[a]);
                 //    }
-                console.log(unfoundIDList);
+                //console.log(unfoundIDList);
                 callback(null, nameList, unfoundIDList);
             } else {
                 console.log('No data found.');
