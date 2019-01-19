@@ -501,11 +501,13 @@ client.on('message', message => {
 
                         message.channel.send('Attendance for tonight:\n' + data.sort());
                         if (notFoundIds.length != 0) {
+                            console.log('No Match for ids:\n' + notFoundIds);
                             message.channel.send('No Match for ids:\n' + notFoundIds);
                         }
                         //Update Attendance sheet accoding to family names
                         updateAttendanceSheet(key, data, function (err, res) {
                             if (res.length != 0) {
+                                console.log('No Match for family names:\n' + res);
                                 message.channel.send('No Match for family names:\n' + res);
                             }
                         });
