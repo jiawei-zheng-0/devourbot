@@ -13,5 +13,10 @@
 .git
 .gitignore
 
+
 # Node.js dependencies:
 node_modules/
+
+config.json
+token.json
+credentials.json

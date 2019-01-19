@@ -249,6 +249,7 @@ function idToFamilyNames(auth, idList, callback) {
         if (res != undefined) {
             const rows = res.data.values;
             var nameList = [];
+            var unfoundIDList = [];
             if (rows.length) {
                 //console.log(rows);
                 //Matches ids from idList to ids from sheet, if found, push name to nameList
@@ -256,18 +257,22 @@ function idToFamilyNames(auth, idList, callback) {
                     for (var c = 0; c < rows.length; c++) {
                         if (rows[c][0] === idList[i]) {
                             //console.log('match' + rows[c][1]);
-                            nameList.push(rows[c][1]);
+                            nameList.push(rows[c][1].toLowerCase());
                             break;
+                        }
+                        if (c === rows.length - 1) {//If reached end of list without matching ID, id is not on id table
+                            console.log('Error: No match found for ' + idList[i]);
+                            unfoundIDList.push(idList[i]);
                         }
                     }
                 }
                 //If any nameList entry contains numbers, that means id didnt match any family name
-                for (var a = 0; a < nameList.length; a++) {
-                    if (nameList[a].match(/\d/g)) {
-                        console.log('Error: No match found for ' + nameList[a]);
-                    }
-                }
-                callback(null, nameList);
+                //for (var a = 0; a < nameList.length; a++) {
+                //    if (nameList[a].match(/\d/g)) {
+                //        console.log('Error: No match found for ' + nameList[a]);
+                //    }
+                console.log(unfoundIDList);
+                callback(null, nameList, unfoundIDList);
             } else {
                 console.log('No data found.');
             }
@@ -296,14 +301,24 @@ function updateAttendanceSheet(auth, nameList, callback) {
             //console.log(rows);
             //Iterates through Table rows, if family name is on nameList, add a y to end of its row, if not add a n
             for (var i = 0; i < rows.length; i++) {
-                if (nameList.includes(rows[i][0])) {
+                var famName = rows[i][0];
+                if (nameList.includes(famName.toLowerCase())) {
                     rows[i].push('y');
+                    //Remove matched name from nameList
+                    //for (var b = 0; b < nameList.length - 1; b++) {
+                    //    if (nameList[b] === famName) {
+                    //        nameList.splice(b, 1);
+                    //    }
+                    //}
+                    var index = nameList.indexOf(famName.toLowerCase());
+                    if (index !== -1) nameList.splice(index, 1);
                 }
                 else {
                     rows[i].push('n');
                 }
             }
             //console.log(rows);
+
 
             const resource = {
                 'values': rows
@@ -315,7 +330,7 @@ function updateAttendanceSheet(auth, nameList, callback) {
                 valueInputOption: 'USER_ENTERED',
                 resource: resource
             }, (err, res) => {
-                callback(null, res);
+                callback(null, nameList);
             });
 
         } else {
@@ -346,8 +361,8 @@ client.on('message', message => {
         //Check SMH balance
         if (message.content === '$commands') {
             var reply = '`\nCommands:\nDevour Exclusive:\n$balance - Check your SMH total since last payout' +
-            '\n$guildbalance - Check guild\'s SMH total since last payout' +
-            '\n$summary - View Summary of your last submitted SMH form`';
+                '\n$guildbalance - Check guild\'s SMH total since last payout' +
+                '\n$summary - View Summary of your last submitted SMH form`';
             message.reply(reply);
         }
         else if (message.content === '$balance') {
@@ -479,15 +494,20 @@ client.on('message', message => {
                     //Removes duplicate ids on attendance sheet
                     var filteredAttendanceSheet = uniq(attendanceSheet);
                     //Converts Ids to their respective family names
-                    idToFamilyNames(key, filteredAttendanceSheet, function (err, data) {
+                    idToFamilyNames(key, filteredAttendanceSheet, function (err, data, notFoundIds) {
                         console.log(new Date().toLocaleString() + ' Attendance :\n' + data);
                         //Clears attendanceSheet
                         attendanceSheet = [];
 
                         message.channel.send('Attendance for tonight:\n' + data.sort());
+                        if (notFoundIds.length != 0) {
+                            message.channel.send('No Match for ids:\n' + notFoundIds);
+                        }
                         //Update Attendance sheet accoding to family names
                         updateAttendanceSheet(key, data, function (err, res) {
-                            return null;
+                            if (res.length != 0) {
+                                message.channel.send('No Match for family names:\n' + res);
+                            }
                         });
                     });
                 }
