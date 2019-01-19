@@ -87,7 +87,10 @@ function initSheetConnection(auth) {
         }
     });
 }
-function getGuildBalance(auth, callback) { // gets guild total from shreadsheet cell=totalRange
+/*
+    Gets the guild total balance from SMH
+*/
+function getGuildBalance(auth, callback) {
     const sheets = google.sheets({ version: 'v4', auth });
     sheets.spreadsheets.values.get({
         spreadsheetId: config.sheetID,
@@ -103,9 +106,11 @@ function getGuildBalance(auth, callback) { // gets guild total from shreadsheet 
         }
     });
 }
-function getBalanceByID(auth, id, callback) { //  gets individual total by updating cell=idcell, which in turn updates cell=individualTotalCell with that id's total, and returns it
+/*
+    Gets Balance for param id
+*/
+function getBalanceByID(auth, id, callback) {
     const sheets = google.sheets({ version: 'v4', auth });
-
     const resource = {
         'values': [
             [
@@ -113,7 +118,8 @@ function getBalanceByID(auth, id, callback) { //  gets individual total by updat
             ]
         ]
     };
-    sheets.spreadsheets.values.update({//update idcell with id
+    //Updates cell with id
+    sheets.spreadsheets.values.update({
         spreadsheetId: config.sheetID,
         range: config.idCell,
         valueInputOption: 'USER_ENTERED',
@@ -122,7 +128,8 @@ function getBalanceByID(auth, id, callback) { //  gets individual total by updat
         if (err) console.log('Error in updating Cell, the API returned an error: ' + err);
         //var result = res.result;
         //console.log(result);
-        sheets.spreadsheets.values.get({//gets individualTotalCell and returns it
+        //Gets result cell with Balance
+        sheets.spreadsheets.values.get({
             spreadsheetId: config.sheetID,
             range: config.individualTotalCell,
         }, (err, res) => {
@@ -137,8 +144,10 @@ function getBalanceByID(auth, id, callback) { //  gets individual total by updat
         });
     });
 }
-
-function getSummary(auth, id, callback) {//updates summaryIDCell with id, and returns array of last trip values
+/*
+    Gets Summary of last Form entry matching id
+*/
+function getSummary(auth, id, callback) {
     const sheets = google.sheets({ version: 'v4', auth });
 
     const resource = {
@@ -148,7 +157,8 @@ function getSummary(auth, id, callback) {//updates summaryIDCell with id, and re
             ]
         ]
     };
-    sheets.spreadsheets.values.update({//update summaryIDCell with id
+    //Update Cell with id
+    sheets.spreadsheets.values.update({
         spreadsheetId: config.sheetID,
         range: config.summaryIDCell,
         valueInputOption: 'USER_ENTERED',
@@ -157,7 +167,8 @@ function getSummary(auth, id, callback) {//updates summaryIDCell with id, and re
         if (err) console.log('Error in updating Cell, the API returned an error: ' + err);
         //var result = res.result;
         //console.log(result);
-        sheets.spreadsheets.values.get({//gets a array of values from last trip
+        //Get result array of last form entry
+        sheets.spreadsheets.values.get({
             spreadsheetId: config.sheetID,
             range: config.summaryRange,
         }, (err, res) => {
@@ -172,20 +183,19 @@ function getSummary(auth, id, callback) {//updates summaryIDCell with id, and re
         });
     });
 }
-var sheetName;
+
+var sheetName;//Sheet name stores the name of the first sheet in attendance spreadsheet
+/*
+    Adds a new column to attendance spreadsheet
+*/
 function addNewColumn(auth, callback) {
     const sheets = google.sheets({ version: 'v4', auth });
     var sheetId;
     var columnNum;
     var request = {
-        // The spreadsheet to request.
-        spreadsheetId: config.attendanceSheetID,  // TODO: Update placeholder value.
-        // The ranges to retrieve from the spreadsheet.
-        ranges: [],  // TODO: Update placeholder value.
-        // True if grid data should be returned.
-        // This parameter is ignored if a field mask was set in the request.
-        includeGridData: false,  // TODO: Update placeholder value.
-
+        spreadsheetId: config.attendanceSheetID,
+        ranges: [],
+        includeGridData: false,
         auth: auth,
     };
     sheets.spreadsheets.get(request, function (err, response) {
@@ -193,13 +203,13 @@ function addNewColumn(auth, callback) {
             console.error(err);
             return;
         }
-
-        // TODO: Change code below to process the `response` object:
+        //Get name of 1st sheet
         sheetName = response.data.sheets[0].properties.title;
+        //Get ID of 1st sheet
         sheetId = response.data.sheets[0].properties.sheetId;
+        //get number of columns in 1st sheet
         columnNum = response.data.sheets[0].properties.gridProperties.columnCount;
         const requests = [];
-        // Change the spreadsheet's title.
         requests.push({
             appendDimension: {
                 sheetId: sheetId,
@@ -207,24 +217,30 @@ function addNewColumn(auth, callback) {
                 length: 1
             },
         });
-        // Add additional requests (operations) ...
         const batchUpdateRequest = { requests };
         sheets.spreadsheets.batchUpdate({
             spreadsheetId: config.attendanceSheetID,
             resource: batchUpdateRequest
         }, (err, response) => {
             if (err) {
-                // Handle error
                 console.log(err);
             } else {
-                console.log('Column Added');
+                //console.log('Column Added');
                 callback(null, columnNum);
             }
         });
     });
 }
+/*
+    Takes a list of IDs and returns a list of family names associated with the IDs accoding to spreadsheet
+    Ids with no matching Family names remain ids
+*/
 function idToFamilyNames(auth, idList, callback) {
     const sheets = google.sheets({ version: 'v4', auth });
+    /*
+        Gets an array of arrays containg id and family names
+        [[123,'family1'],[234,'faimly2'],...]
+    */
     sheets.spreadsheets.values.get({
         spreadsheetId: config.attendanceSheetID,
         range: config.IDTable,
@@ -234,16 +250,18 @@ function idToFamilyNames(auth, idList, callback) {
             const rows = res.data.values;
             var nameList = [];
             if (rows.length) {
-                console.log(rows);
+                //console.log(rows);
+                //Matches ids from idList to ids from sheet, if found, push name to nameList
                 for (var i = 0; i < idList.length; i++) {
                     for (var c = 0; c < rows.length; c++) {
                         if (rows[c][0] === idList[i]) {
-                            console.log('match' + rows[c][1]);
+                            //console.log('match' + rows[c][1]);
                             nameList.push(rows[c][1]);
                             break;
                         }
                     }
                 }
+                //If any nameList entry contains numbers, that means id didnt match any family name
                 for (var a = 0; a < nameList.length; a++) {
                     if (nameList[a].match(/\d/g)) {
                         console.log('Error: No match found for ' + nameList[a]);
@@ -257,10 +275,17 @@ function idToFamilyNames(auth, idList, callback) {
     });
 }
 
+/*
+    Takes a list of family names and updates attendace spreadsheet by adding a new column with y/n
+*/
 function updateAttendanceSheet(auth, nameList, callback) {
     const sheets = google.sheets({ version: 'v4', auth });
     var range = sheetName + config.attendanceRange;
-    console.log(range);
+    //console.log(range);
+    /*
+        Gets a table of Family names and their attendance
+        [[family1,note,y,n,n,...],[family2,note,y,y,n,...],...]
+    */
     sheets.spreadsheets.values.get({
         spreadsheetId: config.attendanceSheetID,
         range: range,
@@ -268,7 +293,8 @@ function updateAttendanceSheet(auth, nameList, callback) {
         if (err) callback('The API returned an error: ' + err);
         const rows = res.data.values;
         if (rows.length) {
-            console.log(rows);
+            //console.log(rows);
+            //Iterates through Table rows, if family name is on nameList, add a y to end of its row, if not add a n
             for (var i = 0; i < rows.length; i++) {
                 if (nameList.includes(rows[i][0])) {
                     rows[i].push('y');
@@ -277,12 +303,12 @@ function updateAttendanceSheet(auth, nameList, callback) {
                     rows[i].push('n');
                 }
             }
-            console.log(rows);
+            //console.log(rows);
 
             const resource = {
                 'values': rows
             };
-
+            //Updates the table on the sheet with the updated attendance
             sheets.spreadsheets.values.update({
                 spreadsheetId: config.attendanceSheetID,
                 range: config.attendanceRange,
@@ -318,7 +344,13 @@ client.on('message', message => {
         //console.log('Message Recieved: ' + message.author.username + ': ' + message.content);
         //Checks if the message matches any commands
         //Check SMH balance
-        if (message.content === '$balance') {
+        if (message.content === '$commands') {
+            var reply = '`\nCommands:\nDevour Exclusive:\n$balance - Check your SMH total since last payout' +
+            '\n$guildbalance - Check guild\'s SMH total since last payout' +
+            '\n$summary - View Summary of your last submitted SMH form`';
+            message.reply(reply);
+        }
+        else if (message.content === '$balance') {
             //Role Check
             if (message.member.roles.exists('name', config.memberRole)) {
                 console.log(new Date().toLocaleString() + ' Request: Balance request from ' + message.author.username + 'id = ' + message.author.id);
@@ -451,7 +483,8 @@ client.on('message', message => {
                         console.log(new Date().toLocaleString() + ' Attendance :\n' + data);
                         //Clears attendanceSheet
                         attendanceSheet = [];
-                        message.channel.send('Attendance for tonight:\n' + data);
+
+                        message.channel.send('Attendance for tonight:\n' + data.sort());
                         //Update Attendance sheet accoding to family names
                         updateAttendanceSheet(key, data, function (err, res) {
                             return null;
