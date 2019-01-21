@@ -357,7 +357,7 @@ client.once('ready', () => {
 client.on('message', message => {
     //If message was recieved in a text channel
     if (message.channel.type === 'text') {
-        console.log('Message Recieved: ' + message.author.username + ': ' + message.content);
+        //console.log('Message Recieved: ' + message.author.username + ': ' + message.content);
         //Checks if the message matches any commands
         //Check SMH balance
         if (message.content === '$commands') {
@@ -503,6 +503,10 @@ client.on('message', message => {
                         var names = data.sort().toString().replace(/,/g, '\n');
                         message.channel.send('Attendance for tonight:\nTotal attendance: ' + data.length + '\n' + names);
                         if (notFoundIds.length != 0) {
+                            //add on family names for unfoundids
+                            for (var c = 0; c < notFoundIds.length; c++) {
+                                notFoundIds[c] = (notFoundIds[c] + ' : ' + client.users.get(notFoundIds[c]).username);//message.guild.members.get("user ID here");
+                            }
                             console.log('No Match for ids:\n' + notFoundIds);
                             var str = notFoundIds.toString().replace(/,/g, '\n');
                             message.channel.send('No Match for ids:\n' + str);
