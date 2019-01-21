@@ -357,13 +357,14 @@ client.once('ready', () => {
 client.on('message', message => {
     //If message was recieved in a text channel
     if (message.channel.type === 'text') {
-        //console.log('Message Recieved: ' + message.author.username + ': ' + message.content);
+        console.log('Message Recieved: ' + message.author.username + ': ' + message.content);
         //Checks if the message matches any commands
         //Check SMH balance
         if (message.content === '$commands') {
             var reply = '`\nCommands:\nDevour Exclusive:\n$balance - Check your SMH total since last payout' +
                 '\n$guildbalance - Check guild\'s SMH total since last payout' +
-                '\n$summary - View Summary of your last submitted SMH form`';
+                '\n$summary - View Summary of your last submitted SMH form' +
+                '\n$commands - View list of commands for the bot`';
             message.reply(reply);
         }
         else if (message.content === '$balance') {
@@ -539,6 +540,16 @@ client.on('message', message => {
             //message.react(peepostreakEmoji);
             message.channel.send('' + peepostreakEmoji);
         }
+        else if (message.content === '$ak') {
+            message.channel.send('I am the patrigo of irl');
+        }
+        //STop the bot
+        else if (message.content === '$stop') {
+            if (message.member.roles.exists('name', config.modRole)) {
+                client.destroy();
+                process.exit();
+            }
+        }
     }
 });
 
@@ -562,6 +573,27 @@ client.on('voiceStateUpdate', (oldMember, newMember) => {
 
 client.on('error', () => {
     console.log(new Date().toLocaleString() + ' Connection reset');
+});
+client.on('disconnect', () => {
+    console.log(new Date().toLocaleString() + ' Disconnect');
+    client.destroy();
+    process.exit();
+});
+/*
+    Upond a new user joining the server, send a greeting with info about guild
+*/
+client.on('guildMemberAdd', (member) => {
+    console.log(new Date().toLocaleString() + ' New member :' + member.displayName);
+    const infoChannel = client.channels.get('463177896639332353');
+    const docsChannel = client.channels.get('392716965682216960');
+    member.send('`Welcome to the <Devour> discord.`\n\n' +
+        '- Black Desert Online guild\n\n' +
+        'Please check out the ' + infoChannel + ' channel for rules / information regarding the guild, including requirements to become a member.\n\n' +
+        '1) If you are applying to join the guild, please DM someone in the Leadership role on discord.We will ask you a series of questions and set you up to do a PvP Trial.\n\n' +
+        '2) If you are a new member currently in the guild, please DM Leadership in order to get the correct role on discord, and look in our ' + docsChannel + 'channel for the gear survey and axe forms.These are required for new members to submit.\n\n' +
+        '3) If none of the first two scenarios apply to you, and you\'re just here for the community, enjoy your stay and come chill with us on voice. 😊')
+        .then(message => console.log('Sent greeting'))
+        .catch(console.error);
 });
 
 client.login(config.token);
