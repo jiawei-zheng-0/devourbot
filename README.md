@@ -3,7 +3,7 @@ Discord Bot
 Requires a config.json and a credentials.json file
 
 config.json
-
+```json
 {
     "token": "<Discord bot token>",
     "room": "<Name of room to listen for commands>",
@@ -20,4 +20,5 @@ config.json
     "IDTable": "<Range of mapping of ID to name>",
     "attendanceRange": "<Range of cells containing attendance info>"
 }
-`
+```
+credentials.json is avaliable by creating a new GCP project and adding OAuth2 credentials
