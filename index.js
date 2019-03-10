@@ -4,6 +4,9 @@ const config = require('./config.json');
 const fs = require('fs');
 const readline = require('readline');
 const { google } = require('googleapis');
+const util = require('util');
+const log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'w'});
+const log_stdout = process.stdout;
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -18,6 +21,11 @@ fs.readFile('credentials.json', (err, content) => {
     // Authorize a client with credentials, then call the Google Sheets API.
     authorize(JSON.parse(content), initSheetConnection);
 });
+
+console.log = function(d) { //Log to file and console
+    log_file.write(util.format(d) + '\n');
+    log_stdout.write(util.format(d) + '\n');
+};
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
@@ -524,6 +532,21 @@ client.on('message', message => {
             }
             else {
                 console.log(new Date().toLocaleString() + ' Error: Non Devour Member');
+            }
+        }
+        else if (message.channel.id === config.feedbackChannelID) {//feedback msg
+            if (message.member.nickname) {//if user has a nickname
+                const feedback = "<@" + message.author.id + "> " + message.member.nickname + " / " + message.author.username + ":\n" + message.toString();
+                const resultChannel = client.channels.get(config.feedbackResultChannel);
+                resultChannel.send(feedback);
+                console.log(new Date().toLocaleString() + feedback);
+                message.delete();
+            } else {
+                const feedback = "<@" + message.author.id + "> " + message.author.username + " :\n" + message.toString();
+                const resultChannel = client.channels.get(config.feedbackResultChannel);
+                resultChannel.send(feedback);
+                console.log(new Date().toLocaleString() + feedback);
+                message.delete();
             }
         }
         else if (message.content.includes('loli')) {
