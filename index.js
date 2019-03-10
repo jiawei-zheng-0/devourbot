@@ -5,7 +5,7 @@ const fs = require('fs');
 const readline = require('readline');
 const { google } = require('googleapis');
 const util = require('util');
-const log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'w'});
+const log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'a'});
 const log_stdout = process.stdout;
 
 // If modifying these scopes, delete token.json.
