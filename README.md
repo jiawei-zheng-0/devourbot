@@ -1,5 +1,16 @@
 Discord Bot
 
+python 2.7 must be installed
+
+visual studio 2015 must be installed if running on windows
+
+npm config set msvs_version 2015 --global
+
+run npm install
+
+
+
+
 Requires a config.json and a credentials.json file
 
 config.json
