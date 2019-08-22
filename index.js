@@ -103,117 +103,7 @@ function initSheetConnection(auth) {
         }
     });
 }
-/*
-    Gets the guild total balance from SMH
-*/
-/*
-function getGuildBalance(auth, callback) {
-    const sheets = google.sheets({
-        version: 'v4',
-        auth
-    });
-    sheets.spreadsheets.values.get({
-        spreadsheetId: config.sheetID,
-        range: config.totalRange,
-    }, (err, res) => {
-        if (err) callback('The API returned an error: ' + err);
-        const rows = res.data.values;
-        if (rows.length) {
-            //console.log('Data: ' + rows[0][0]);
-            callback(null, rows[0][0]);
-        } else {
-            console.log('No data found.');
-        }
-    });
-}
-*/
-/*
-    Gets Balance for param id
-*/
-/*
-function getBalanceByID(auth, id, callback) {
-    const sheets = google.sheets({
-        version: 'v4',
-        auth
-    });
-    const resource = {
-        'values': [
-            [
-                id
-            ]
-        ]
-    };
-    //Updates cell with id
-    sheets.spreadsheets.values.update({
-        spreadsheetId: config.sheetID,
-        range: config.idCell,
-        valueInputOption: 'USER_ENTERED',
-        resource: resource
-    }, (err, res) => {
-        if (err) console.log('Error in updating Cell, the API returned an error: ' + err);
-        //var result = res.result;
-        //console.log(result);
-        //Gets result cell with Balance
-        sheets.spreadsheets.values.get({
-            spreadsheetId: config.sheetID,
-            range: config.individualTotalCell,
-        }, (err, res) => {
-            if (err) callback('The API returned an error: ' + err);
-            const rows = res.data.values;
-            if (rows.length) {
-                //console.log('Data: ' + rows[0][0]);
-                callback(null, rows[0][0]);
-            } else {
-                console.log('No data found.');
-            }
-        });
-    });
-}
-*/
-/*
-    Gets Summary of last Form entry matching id
-*/
-/*
-function getSummary(auth, id, callback) {
-    const sheets = google.sheets({
-        version: 'v4',
-        auth
-    });
 
-    const resource = {
-        'values': [
-            [
-                id
-            ]
-        ]
-    };
-    //Update Cell with id
-    sheets.spreadsheets.values.update({
-        spreadsheetId: config.sheetID,
-        range: config.summaryIDCell,
-        valueInputOption: 'USER_ENTERED',
-        resource: resource
-    }, (err, res) => {
-        if (err) console.log('Error in updating Cell, the API returned an error: ' + err);
-        //var result = res.result;
-        //console.log(result);
-        //Get result array of last form entry
-        sheets.spreadsheets.values.get({
-            spreadsheetId: config.sheetID,
-            range: config.summaryRange,
-        }, (err, res) => {
-            if (err) callback('The API returned an error: ' + err);
-            const rows = res.data.values;
-            if (rows.length) {
-                //console.log('Data: ' + rows[0]);
-                callback(null, rows[0]);
-            } else {
-                console.log('No data found.');
-            }
-        });
-    });
-}
-*/
 var sheetName; //Sheet name stores the name of the first sheet in attendance spreadsheet
 /*
     Adds a new column to attendance spreadsheet
@@ -317,6 +207,10 @@ function idToFamilyNames(auth, idList, callback) {
         }
     });
 }
+//if member is a mod
+function isRole(member, roleName) {
+    return member.roles.find(role => role.name === roleName);
+}
 
 /*
     Takes a list of family names and updates attendace spreadsheet by adding a new column with y/n
@@ -395,112 +289,25 @@ client.once('ready', () => {
 });
 
 client.on('message', message => {
-    //If message was recieved in a text channel
+    //If message was recieved in a text channel (as oppsed to dms)
     if (message.channel.type === 'text') {
         //console.log('Message Recieved: ' + message.author.username + ': ' + message.content);
         //Checks if the message matches any commands
-        //Check SMH balance
         if (message.content === '$commands') {
-            var reply = '`\nCommands:\nLeadership exclusive Exclusive:\n$startattendance - Start attendance in main room' +
+            var reply = '\nCommands:\nLeadership exclusive Exclusive:\n$startattendance - Start attendance in main room' +
                 '\n$endattendance - end attendance and take attendance' +
                 '\n$optionalloss - end attendance and do NOT take attendance' +
-                '\n$commands - View list of commands for the bot`';
+                '\n$commands - View list of commands for the bot' +
+                '\n$yeslist - List of members that put yes for optional' +
+                '\n$nolist - list of member that put no for optional' +
+                '\n$noresponse - list of member that did not react to sign up bot';
             message.reply(reply);
         }
-        /*
-        else if (message.content === '$balance') {
-            //Role Check
-            if (message.member.roles.exists('name', config.memberRole)) {
-                console.log(new Date().toLocaleString() + ' Request: Balance request from ' + message.author.username + 'id = ' + message.author.id);
-                getBalanceByID(key, message.author.id, function (err, data) {
-                    message.author.send('Your SMH total for this week is ' + data);
-                    console.log(new Date().toLocaleString() + ' Sent Message to ' + message.author.id + ': Your SMH total for this week is ' + data);
-                });
-            }
-            //Role Check Failed
-            else {
-                console.log(new Date().toLocaleString() + 'Error: Non Devour Member');
-            }
-        }
-        //Check Guild SMH total balance
-        else if (message.content === '$guildbalance') {
-            if (message.member.roles.exists('name', config.memberRole)) {
-                console.log(new Date().toLocaleString() + ' Request: Guild total request from ' + message.author.username + ' id = ' + message.author.id);
-                getGuildBalance(key, function (err, data) {
-                    message.author.send('Guild total from SMH since last payout is ' + data);
-                    console.log(new Date().toLocaleString() + ' Sent Message to ' + message.author.id + ': Guild total from SMH since last payout is ' + data);
-                });
-            }
-            else {
-                console.log(new Date().toLocaleString() + ' Error: Non Devour Member');
-            }
-        }
-        */
-        /*
-        //Check Summary of last SMH trip
-        else if (message.content === '$summary') {
-            if (message.member.roles.exists('name', config.memberRole)) {
-                console.log(new Date().toLocaleString() + ' Request: Summary request from ' + message.author.username + ' id = ' + message.author.id);
-                getSummary(key, message.author.id, function (err, data) {
-                    var summaryText = 'Time: ' + data[0]
-                        + '\nFamily Name: ' + data[1];
-                    if (data[2] != '')
-                        summaryText += '\nDeckhand 1 Family Name: ' + data[2];
-                    if (data[3] != '')
-                        summaryText += '\nDeckhand 2 Family Name: ' + data[3];
-                    if (data[4] != '')
-                        summaryText += '\nDeckhand 3 Family Name: ' + data[4];
-                    if (data[5] != '')
-                        summaryText += '\nDeckhand 4 Family Name: ' + data[5];
-                    if (data[22] != '')
-                        summaryText += '\nTotal Value: ' + data[22];
-                    if (data[23] != '')
-                        summaryText += '\nSplit amount: ' + data[23];
-                    if (data[6] != '')
-                        summaryText += '\nSea Monster Neidans: ' + data[6];
-                    if (data[7] != '')
-                        summaryText += '\nOcean Stalker\'s Skin: ' + data[7];
-                    if (data[8] != '')
-                        summaryText += '\nOcean Stalker Whiskers: ' + data[8];
-                    if (data[9] != '')
-                        summaryText += '\nHekaru\'s Spike: ' + data[9];
-                    if (data[10] != '')
-                        summaryText += '\nAmethyst Hekaru Spikes: ' + data[10];
-                    if (data[11] != '')
-                        summaryText += '\nCandidum Shells: ' + data[11];
-                    if (data[12] != '')
-                        summaryText += '\nSTEEL Candidum Shells: ' + data[12];
-                    if (data[13] != '')
-                        summaryText += '\nNineshark\'s Horns Fragments: ' + data[13];
-                    if (data[14] != '')
-                        summaryText += '\nNineshark Fins: ' + data[14];
-                    if (data[15] != '')
-                        summaryText += '\nBlack Rust Jawbones: ' + data[15];
-                    if (data[16] != '')
-                        summaryText += '\nBlack Rust Tongues: ' + data[16];
-                    if (data[17] != '')
-                        summaryText += '\nGoldmont Pirate Coins: ' + data[17];
-                    if (data[18] != '')
-                        summaryText += '\nGoldmont Pirate Goblets: ' + data[18];
-                    if (data[19] != '')
-                        summaryText += '\nScreenshot of inventory items: ' + data[19];
-                    if (data[20] != '')
-                        summaryText += '\nScreenshot of guild funds BEFORE turn in: ' + data[20];
-                    if (data[21] != '')
-                        summaryText += '\nScreenshot of guild funds AFTER turn in: ' + data[21];
-                    message.author.send('Last trip: \n' + summaryText);
-                    console.log(new Date().toLocaleString() + ' Sent Message to ' + message.author.id + ': Last trip: ' + summaryText);
-                });
-            }
-            else {
-                console.log(new Date().toLocaleString() + ' Error: Non Devour Member');// message not from a devour member
-            }
-            */
-
         //Start taking attendance
         else if (message.content === '$startattendance') {
             //Role Check
-            if (message.member.roles.exists('name', config.modRole)) {
+            //console.log(message.member.roles.toJSON());
+            if (isRole(message.member, config.modRole)) {
                 //Check whether attendance is currently beign taken
                 if (attendance == true) {
                     console.log('Attendence already being taken');
@@ -523,7 +330,7 @@ client.on('message', message => {
         }
         //Stop taking attendance and update the attendance sheet
         else if (message.content === '$endattendance') {
-            if (message.member.roles.exists('name', config.modRole)) {
+            if (isRole(message.member, config.modRole)) {
                 if (attendance == false) {
                     console.log('Attendence not being taken');
                     message.channel.send('Attendence not being taken');
@@ -567,7 +374,7 @@ client.on('message', message => {
                 console.log(new Date().toLocaleString() + 'Mod only command');
             }
         } else if (message.content === '$optionalloss') {
-            if (message.member.roles.exists('name', config.modRole)) {
+            if (isRole(message.member, config.modRole)) {
                 if (attendance == false) {
                     console.log('Attendence not being taken');
                     message.channel.send('Attendence not being taken');
@@ -581,19 +388,16 @@ client.on('message', message => {
                 console.log(new Date().toLocaleString() + 'Mod only command');
             }
         } else if (message.channel.id === config.feedbackChannelID) { //feedback msg
+            let feedback;
             if (message.member.nickname) { //if user has a nickname
-                const feedback = '<@' + message.author.id + '> ' + message.member.nickname + ' / ' + message.author.username + ':\n' + message.toString();
-                const resultChannel = client.channels.get(config.feedbackResultChannel);
-                resultChannel.send(feedback);
-                console.log(new Date().toLocaleString() + feedback);
-                message.delete();
-            } else {
-                const feedback = '<@' + message.author.id + '> ' + message.author.username + ' :\n' + message.toString();
-                const resultChannel = client.channels.get(config.feedbackResultChannel);
-                resultChannel.send(feedback);
-                console.log(new Date().toLocaleString() + feedback);
-                message.delete();
+                feedback = '<@' + message.author.id + '> ' + message.member.nickname + ' / ' + message.author.username + ':\n' + message.toString();
+            } else { //else ur username
+                feedback = '<@' + message.author.id + '> ' + message.author.username + ' :\n' + message.toString();
             }
+            const resultChannel = client.channels.get(config.feedbackResultChannel);
+            resultChannel.send(feedback);
+            console.log(new Date().toLocaleString() + feedback);
+            message.delete();
         } else if (message.content.includes('loli')) {
             const poggersEmoji = client.emojis.get('443185247107153930');
             message.channel.send(`L O L I S ${poggersEmoji}`);
@@ -608,10 +412,79 @@ client.on('message', message => {
             message.channel.send(`${peepostreakEmoji}`);
         } else if (message.content === '$ak') {
             message.channel.send('I am the patrigo of irl');
+        } else if (message.content === '$join' && message.member.voice.connection != null) {
+            message.member.voice.channel.join();
+        } else if (message.content === '$yeslist') {
+            message.channel.startTyping();
+            const members = message.guild.members;
+            const yesList = [];
+            members.forEach(member => {
+                if ((isRole(member, config.memberRole) || isRole(member, config.premiumRole) || isRole(member, config.guildMasterRole)) && isRole(member, config.yesRole)) {
+                    yesList.push(member.id);
+                }
+            });
+            idToFamilyNames(key, yesList, (err, data, notFoundIds) => {
+                const familyNames = data.sort().toString().replace(/,/g, '\n');
+                message.channel.send('Yes List:\nTotal Yes: ' + data.length + '\n' + familyNames);
+                if (notFoundIds.length != 0) {
+                    for (var c = 0; c < notFoundIds.length; c++) {
+                        notFoundIds[c] = (notFoundIds[c] + ' : ' + client.users.get(notFoundIds[c]).username);
+                    }
+                    console.log('No Match for ids:\n' + notFoundIds);
+                    var notFoundIdsTxt = notFoundIds.toString().replace(/,/g, '\n');
+                    message.channel.send('No Match for ids:\n' + notFoundIdsTxt);
+                }
+            });
+            message.channel.stopTyping();
+        } else if (message.content === '$nolist') {
+            message.channel.startTyping();
+            const members = message.guild.members;
+            const noList = [];
+            members.forEach(member => {
+                if ((isRole(member, config.memberRole) || isRole(member, config.premiumRole) || isRole(member, config.guildMasterRole)) && isRole(member, config.noRole)) {
+                    noList.push(member.id);
+                }
+            });
+            idToFamilyNames(key, noList, (err, data, notFoundIds) => {
+                const familyNames = data.sort().toString().replace(/,/g, '\n');
+                message.channel.send('No List:\nTotal No: ' + data.length + '\n' + familyNames);
+                if (notFoundIds.length != 0) {
+                    for (var c = 0; c < notFoundIds.length; c++) {
+                        notFoundIds[c] = (notFoundIds[c] + ' : ' + client.users.get(notFoundIds[c]).username);
+                    }
+                    console.log('No Match for ids:\n' + notFoundIds);
+                    var notFoundIdsTxt = notFoundIds.toString().replace(/,/g, '\n');
+                    message.channel.send('No Match for ids:\n' + notFoundIdsTxt);
+                }
+            });
+            message.channel.stopTyping();
+        } else if (message.content === '$noresponse') {
+            message.channel.startTyping();
+            const members = message.guild.members;
+            const noResponseList = [];
+            members.forEach(member => {
+                if ((isRole(member, config.memberRole) || isRole(member, config.premiumRole) || isRole(member, config.guildMasterRole))
+                    && (!isRole(member, config.noRole) && !isRole(member, config.yesRole))) {
+                    noResponseList.push(member.id);
+                }
+            });
+            idToFamilyNames(key, noResponseList, (err, data, notFoundIds) => {
+                const familyNames = data.sort().toString().replace(/,/g, '\n');
+                message.channel.send('No response List:\nTotal no responses: ' + data.length + '\n' + familyNames);
+                if (notFoundIds.length != 0) {
+                    for (var c = 0; c < notFoundIds.length; c++) {
+                        notFoundIds[c] = (notFoundIds[c] + ' : ' + client.users.get(notFoundIds[c]).username);
+                    }
+                    console.log('No Match for ids:\n' + notFoundIds);
+                    var notFoundIdsTxt = notFoundIds.toString().replace(/,/g, '\n');
+                    message.channel.send('No Match for ids:\n' + notFoundIdsTxt);
+                }
+            });
+            message.channel.stopTyping();
         }
         //STop the bot
         else if (message.content === '$stop') {
-            if (message.member.roles.exists('name', config.modRole)) {
+            if (isRole(message.member), config.modRole) {
                 client.destroy();
                 process.exit();
             }
