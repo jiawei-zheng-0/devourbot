@@ -330,6 +330,7 @@ client.on('message', message => {
         }
         //Stop taking attendance and update the attendance sheet
         else if (message.content === '$endattendance') {
+            message.channel.startTyping();
             if (isRole(message.member, config.modRole)) {
                 if (attendance == false) {
                     console.log('Attendence not being taken');
@@ -369,6 +370,7 @@ client.on('message', message => {
                         });
                     });
                 }
+                message.channel.stopTyping();
             } else {
                 message.channel.send('Mod only command');
                 console.log(new Date().toLocaleString() + 'Mod only command');
@@ -496,13 +498,15 @@ client.on('message', message => {
     When a new user joins main war room and attendance is currently being taken, push his ID into attendence sheet
 */
 client.on('voiceStateUpdate', (oldMember, newMember) => {
+    //console.log("Room change");
     if (attendance == true) {
-        const newUserChannel = newMember.voiceChannel;
+        const newUserChannel = newMember.channel;
+        //console.log(`new room = ${newUserChannel.id}`);
         //const oldUserChannel = oldMember.voiceChannel;
         //console.log(oldMember + newMember);
         if (newUserChannel != undefined && newUserChannel.id === config.warChannelID) { //user joins mains channel
             //console.log(new Date().toLocaleString() + ' user joined');
-            attendanceSheet.push(newMember.user.id);
+            attendanceSheet.push(newMember.id);
         }
         // else if (newUserChannel === undefined) {
         //   console.log(newMember.user.username + 'user left' + oldUserChannel);
