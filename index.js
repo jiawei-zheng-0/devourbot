@@ -7,6 +7,7 @@ const { google } = require('googleapis');
 const util = require('util');
 const log_file = fs.createWriteStream(__dirname + '/debug.log', { flags: 'a' });
 const log_stdout = process.stdout;
+var broadcast;
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -300,7 +301,13 @@ client.on('message', message => {
                 '\n$commands - View list of commands for the bot' +
                 '\n$yeslist - List of members that put yes for optional' +
                 '\n$nolist - list of member that put no for optional' +
-                '\n$noresponse - list of member that did not react to sign up bot';
+                '\n$noresponse - list of member that did not react to sign up bot' +
+                '\n$join - join the current voice channel the user is in' +
+                '\n$leave - leave voice channel' +
+                '\n$play youtubeurl - plays the youtube to the voice channel the user is currently in' +
+                '\n$pause - pause playing' +
+                '\n$resume - resume playing' +
+                '\n$stop - stop playing';
             message.reply(reply);
         }
         //Start taking attendance
@@ -414,8 +421,41 @@ client.on('message', message => {
             message.channel.send(`${peepostreakEmoji}`);
         } else if (message.content === '$ak') {
             message.channel.send('I am the patrigo of irl');
-        } else if (message.content === '$join' && message.member.voice.connection != null) {
-            message.member.voice.channel.join();
+        } else if (message.content === '$join' && message.member.voiceChannel != null) {
+            if (message.member.voiceChannel) {
+                message.member.voiceChannel.join()
+                    .then(connection => { // Connection is an instance of VoiceConnection
+
+                    })
+                    .catch(console.log);
+            }
+        } else if (message.content.startsWith('$play') && client.voiceConnections != null ) {
+            let url = message.content.slice(5);
+
+            if (url && message.member.voiceChannel) {
+                console.log(`playing ${url}`);
+                message.member.voiceChannel.join()
+                    .then(connection => { // Connection is an instance of VoiceConnection
+                        broadcast = connection;
+                        const ytdl = require('ytdl-core');
+                        const streamOptions = { seek: 0, volume: 1 };
+                        const stream = ytdl(url, { filter: 'audioonly' });
+                        const dispatcher = connection.playStream(stream, streamOptions);
+                        broadcast = dispatcher;
+                    })
+                    .catch(console.error);
+            }
+        }
+        else if (message.content === '$stop' && client.voiceConnections != null) {
+            broadcast.end();
+        } else if (message.content === '$pause' && client.voiceConnections != null) {
+            broadcast.pause();
+        } else if (message.content === '$resume' && client.voiceConnections != null) {
+            broadcast.resume();
+        } else if (message.content === '$leave' && client.voiceConnections != null) {
+            if (broadcast)
+                broadcast.end();
+            message.member.voiceChannel.leave();
         } else if (message.content === '$yeslist') {
             message.channel.startTyping();
             const members = message.guild.members;
