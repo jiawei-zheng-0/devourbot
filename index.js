@@ -409,7 +409,7 @@ client.on('message', message => {
         } else if (message.content.match(/\brin\b/g)) {
             const peepogunEmoji = client.emojis.get('421812739967680523');
             message.channel.send(`${peepogunEmoji}`);
-        } else if (message.mentions.has(message.guild.members.get('534802636822675468'))) {
+        } else if (message.isMentioned('534802636822675468')) {
             const peepostreakEmoji = client.emojis.get('450463089775738880');
             message.channel.send(`${peepostreakEmoji}`);
         } else if (message.content === '$ak') {
@@ -500,13 +500,13 @@ client.on('message', message => {
 client.on('voiceStateUpdate', (oldMember, newMember) => {
     //console.log("Room change");
     if (attendance == true) {
-        const newUserChannel = newMember.channel;
+        const newUserChannel = newMember.voiceChannel;
         //console.log(`new room = ${newUserChannel.id}`);
         //const oldUserChannel = oldMember.voiceChannel;
         //console.log(oldMember + newMember);
         if (newUserChannel != undefined && newUserChannel.id === config.warChannelID) { //user joins mains channel
             //console.log(new Date().toLocaleString() + ' user joined');
-            attendanceSheet.push(newMember.id);
+            attendanceSheet.push(newMember.user.id);
         }
         // else if (newUserChannel === undefined) {
         //   console.log(newMember.user.username + 'user left' + oldUserChannel);
